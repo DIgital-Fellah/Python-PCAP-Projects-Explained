@@ -1,0 +1,170 @@
+# Import necessary libraries
+# The 'urandom' function from the 'os' module is used to generate random bytes
+from os import urandom
+
+# Import classes and functions for cryptographic operations
+# 'Cipher', 'algorithms', and 'modes' are from 'cryptography.hazmat.primitives.ciphers'
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+# Import classes and functions for hashing operations
+# 'hashes' and 'SHA256' are from 'cryptography.hazmat.primitives'
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.hash import SHA256
+
+
+def xor(data1, data2):
+    """
+    Performs bitwise XOR operation between two byte arrays.
+    
+    Args:
+        data1 (bytes): First byte array.
+        data2 (bytes): Second byte array.
+    
+    Returns:
+        bytes: Result of XOR operation.
+    
+    Raises:
+        ValueError: If data lengths are not equal.
+    """
+    # Check if the lengths of data1 and data2 are equal
+    if len(data1) != len(data2):
+        raise ValueError("Data lengths must be equal for XOR operation")
+    
+    # Perform bitwise XOR on each pair of bytes from data1 and data2
+    return bytes([a ^ b for a, b in zip(data1, data2)])
+
+
+def generate_random_key(key_size):
+    """
+    Generates a random key of specified size in bytes.
+    
+    Args:
+        key_size (int): Size of the desired key in bytes.
+    
+    Returns:
+        bytes: Randomly generated key.
+    """
+    # Generate random bytes of length key_size using urandom
+    return urandom(key_size)
+
+
+def aes_encrypt(data, key, iv):
+    """
+    Encrypts data using AES-CBC with a given key and initialization vector (IV).
+    
+    Args:
+        data (bytes): Data to be encrypted.
+        key (bytes): AES key (must be 16, 24, or 32 bytes).
+        iv (bytes): Initialization vector (must be 16 bytes).
+    
+    Returns:
+        bytes: Encrypted data.
+    
+    Raises:
+        ValueError: If key size is invalid or IV size is not 16 bytes.
+    """
+    # Check if the key length is valid (16, 24, or 32 bytes)
+    if len(key) not in (16, 24, 32):
+        raise ValueError("AES key size must be 16, 24, or 32 bytes")
+    
+    # Check if the IV length is valid (16 bytes)
+    if len(iv) != 16:
+        raise ValueError("Initialization vector (IV) must be 16 bytes")
+    
+    # Create an AES cipher object in CBC mode with the given key and IV
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+    
+    # Create an encryptor object from the cipher
+    encryptor = cipher.encryptor()
+    
+    # Encrypt the data and finalize the encryption process
+    ciphertext = encryptor.update(data) + encryptor.finalize()
+    
+    # Return the encrypted data
+    return ciphertext
+
+
+def aes_decrypt(ciphertext, key, iv):
+    """
+    Decrypts data using AES-CBC with a given key and initialization vector (IV).
+    
+    Args:
+        ciphertext (bytes): Encrypted data.
+        key (bytes): AES key (must be 16, 24, or 32 bytes).
+        iv (bytes): Initialization vector (must be 16 bytes).
+    
+    Returns:
+        bytes: Decrypted data.
+    
+    Raises:
+        ValueError: If key size is invalid or IV size is not 16 bytes.
+    """
+    # Check if the key length is valid (16, 24, or 32 bytes)
+    if len(key) not in (16, 24, 32):
+        raise ValueError("AES key size must be 16, 24, or 32 bytes")
+    
+    # Check if the IV length is valid (16 bytes)
+    if len(iv) != 16:
+        raise ValueError("Initialization vector (IV) must be 16 bytes")
+    
+    # Create an AES cipher object in CBC mode with the given key and IV
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+    
+    # Create a decryptor object from the cipher
+    decryptor = cipher.decryptor()
+    
+    # Decrypt the data and finalize the decryption process
+    plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+    
+    # Return the decrypted data
+    return plaintext
+
+
+def hash_sha256(data):
+    """
+    Calculates SHA-256 hash of the input data.
+    
+    Args:
+        data (bytes): Data to be hashed.
+    
+    Returns:
+        bytes: SHA-256 hash of the data.
+    """
+    # Create a new SHA-256 hash object
+    digest = hashes.Hash(SHA256())
+    
+    # Update the hash object with the data to be hashed
+    digest.update(data)
+    
+    # Finalize the hashing process and return the hash
+    return digest.finalize()
+
+
+# Example usage of the cryptographic functions
+
+# The message to be encrypted and hashed
+message = b"This is a secret message!"
+
+# Generate a random 16-byte key for AES-128 encryption
+key = generate_random_key(16)
+
+# Generate a random 16-byte IV for AES-CBC mode
+iv = generate_random_key(16)
+
+# Encrypt the message using AES-CBC with the generated key and IV
+encrypted_data = aes_encrypt(message, key, iv)
+
+# Decrypt the encrypted data using the same key and IV
+decrypted_data = aes_decrypt(encrypted_data, key, iv)
+
+# Print the original message, encrypted data, and decrypted message
+print("Original message:", message)
+print("Encrypted data:", encrypted_data)
+print("Decrypted message:", decrypted_data)
+
+# Calculate and print the SHA-256 hash of the original message
+hash_value = hash_sha256(message)
+print("SHA-256 hash of the message:", hash_value)
+
+# Print the XOR result of two example byte arrays
+print("XOR of b'123' and b'456':", xor(b'123', b'456'))
