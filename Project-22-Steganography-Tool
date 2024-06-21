@@ -1,0 +1,87 @@
+def hide_message(image_path, message):
+    """Hides a message within a BMP image file.
+
+    Args:
+        image_path: Path to the image file.
+        message: The message to hide.
+
+    Raises:
+        ValueError: If the message is too large for the image.
+    """
+    # Open the image and message files
+    with open(image_path, "rb") as image_file:
+        # Read the image file content into a bytearray
+        image_data = bytearray(image_file.read())
+
+    # Encode the message into bytes
+    message_bytes = message.encode()
+
+    # Check if there's enough space in the image for the message
+    # Each character in the message will need 8 bits, so we need at least that many bits in the image
+    if len(message_bytes) * 8 > len(image_data):
+        raise ValueError("Message is too large to hide in this image.")
+
+    # Convert message to binary string
+    # Format each byte of the message as an 8-bit binary string and join them together
+    message_binary = "".join(format(b, "08b") for b in message_bytes)
+
+    # Hide message bit by bit in least significant bits (LSBs) of image data
+    index = 0
+    # Iterate through each byte of the image data
+    for i in range(len(image_data)):
+        # Replace LSB with message bit if available
+        if index < len(message_binary):
+            new_byte = image_data[i] & ~1  # Clear the LSB of the byte
+            new_byte |= int(message_binary[index], 2)  # Set LSB with message bit
+            image_data[i] = new_byte  # Update the byte in image_data
+            index += 1  # Move to the next bit of the message
+
+    # Overwrite original image with steganographic image
+    with open(image_path, "wb") as image_file:
+        # Write the modified image data back to the file
+        image_file.write(image_data)
+
+
+def extract_message(image_path):
+    """Extracts a hidden message from a BMP image file.
+
+    Args:
+        image_path: Path to the image file.
+
+    Returns:
+        The extracted message as a string.
+    """
+    # Open the image file
+    with open(image_path, "rb") as image_file:
+        # Read the image file content into a bytearray
+        image_data = bytearray(image_file.read())
+
+    # Extract message bits
+    message_binary = ""
+    # Iterate through each byte of the image data
+    for byte in image_data:
+        # Extract the LSB and append it to the message_binary string
+        message_binary += str(byte & 1)
+
+    # Convert binary string to message bytes
+    # Process every 8 bits (1 byte) of the binary string and convert to a byte
+    message_bytes = bytes(int(message_binary[i:i + 8], 2) for i in range(0, len(message_binary), 8))
+
+    # Decode message
+    # Convert the byte array back to a string
+    return message_bytes.decode()
+
+
+# Example usage
+# Define the path to the BMP image
+image_path = "secret_image.bmp"
+# Define the message to hide in the image
+message = "This is a secret message."
+
+# Call the hide_message function to hide the message in the image
+hide_message(image_path, message)
+# Call the extract_message function to retrieve the hidden message from the image
+extracted_message = extract_message(image_path)
+
+# Print the extracted message
+print("Extracted message:", extracted_message)
