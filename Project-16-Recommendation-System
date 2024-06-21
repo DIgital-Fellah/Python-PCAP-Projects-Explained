@@ -1,0 +1,74 @@
+# Import necessary libraries
+import pandas as pd  # For data manipulation
+from surprise import Reader, Dataset, SVDpp  # For recommendation system
+
+# Define the path to your dataset (replace "your_data.csv" with your actual data path)
+data_path = "your_data.csv"
+
+# Read the dataset using pandas
+data = pd.read_csv(data_path)
+
+# Define the column names in your dataset for user ID, item ID, and rating
+user_id_col = "user_id"  # Replace with the actual column name for user IDs
+item_id_col = "item_id"  # Replace with the actual column name for item IDs
+rating_col = "rating"  # Replace with the actual column name for ratings
+
+# Select only the relevant columns from the dataset
+data = data[[user_id_col, item_id_col, rating_col]]
+
+# Create a Surprise Dataset reader object with a specified rating scale
+# Adjust the rating scale (1, 5) according to your dataset's rating range
+reader = Reader(rating_scale=(1, 5))
+
+# Load the data into a Surprise Dataset format
+data_surprise = Dataset.load_from_df(data[[user_id_col, item_id_col, rating_col]], reader)
+
+# Initialize the SVD++ algorithm for training the recommendation model
+algo = SVDpp()
+
+# Build a full training set from the dataset
+trainset = data_surprise.build_full_trainset()
+
+# Train the SVD++ algorithm on the training set
+algo.fit(trainset)
+
+# Define a function to get recommendations for a specific user
+def get_recommendations(user_id, num_recommendations=10):
+    """
+    This function recommends items for a specific user.
+    
+    Args:
+        user_id (int): The ID of the user for whom recommendations are desired.
+        num_recommendations (int, optional): The number of recommendations to return. Defaults to 10.
+    
+    Returns:
+        list: A list of recommended item IDs.
+    """
+    
+    # Initialize an empty list to store predictions
+    predictions = []
+    
+    # Iterate through all items to predict ratings for the given user
+    for item_id in trainset.all_items():
+        # Predict the rating for the user and item
+        prediction = algo.predict(uid=user_id, iid=item_id)
+        # Add the prediction to the list
+        predictions.append(prediction)
+    
+    # Sort the predictions based on the estimated rating in descending order
+    predictions.sort(key=lambda x: x.est, reverse=True)
+    
+    # Extract the item IDs of the top N recommendations that have an estimated rating greater than 3.0
+    recommended_item_ids = [pred.iid for pred in predictions if (pred.est > 3.0)][:num_recommendations]
+    
+    # Return the list of recommended item IDs
+    return recommended_item_ids
+
+# Example usage of the recommendation function
+user_id = 123  # Replace with the user ID for whom you want recommendations
+
+# Get recommendations for the specified user
+recommendations = get_recommendations(user_id)
+
+# Print the recommended items for the user
+print(f"Recommended items for user {user_id}: {recommendations}")
