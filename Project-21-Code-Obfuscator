@@ -1,0 +1,79 @@
+# Import the random library, which is necessary for generating random names
+import random
+
+def obfuscate(code):
+  """
+  Obfuscates Python code by renaming variables and functions.
+
+  Args:
+      code: The Python code string to obfuscate.
+
+  Returns:
+      The obfuscated Python code string.
+  """
+
+  # Define a function to generate random variable names
+  def random_name(length=8):
+    """
+    Generates a random alphanumeric string of specified length.
+
+    Args:
+        length: The length of the random string to generate (default is 8).
+
+    Returns:
+        A randomly generated string of the specified length.
+    """
+    # Define the characters that can be used in the random string
+    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    # Generate and return the random string
+    return ''.join(random.choice(chars) for _ in range(length))
+
+  # Create a dictionary to store the mapping of original names to obfuscated names
+  name_map = {}
+
+  # Split the original code into lines to process each line individually
+  obfuscated_code = []
+  for line in code.splitlines():
+    # Make a copy of the line to apply transformations
+    new_line = line
+
+    # Split the line into words to find variable and function names
+    for word in line.split():
+      # Check if the word is an identifier (variable or function name)
+      if word.isalpha() or (word.startswith("_") and word[1:].isalpha()):
+        # If the word is not already mapped, create a new obfuscated name
+        if word not in name_map:
+          name_map[word] = random_name()
+        # Replace the original name with the obfuscated name
+        new_line = new_line.replace(word, name_map[word])
+
+    # Append the transformed line to the list of obfuscated code lines
+    obfuscated_code.append(new_line)
+
+  # Join the obfuscated lines into a single string and add explanatory comments
+  return "\n".join(obfuscated_code) + """
+
+  # Comments to explain obfuscation (For educational purposes only)
+  # This code obfuscates variable and function names to make it less readable.
+  # It uses a dictionary (name_map) to store the mapping between original and obfuscated names.
+  # This is a basic implementation and more advanced techniques can be used for stronger obfuscation.
+  """
+
+# Example usage (replace with your actual code)
+original_code = """
+def my_function(x, y):
+  result = x + y
+  return result
+
+print(my_function(5, 3))
+"""
+
+# Call the obfuscate function with the example code to demonstrate its functionality
+obfuscated_code = obfuscate(original_code)
+# Print the obfuscated code to see the result
+print(obfuscated_code) 
+
+# Comments to explain the example usage
+# The original_code variable contains a simple Python function that adds two numbers.
+# The obfuscate function is called with this code to generate an obfuscated version.
+# The obfuscated code is printed to show how the variable and function names have been changed.
