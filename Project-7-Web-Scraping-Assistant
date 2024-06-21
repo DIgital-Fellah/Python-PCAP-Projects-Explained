@@ -1,0 +1,80 @@
+# Import necessary libraries for web scraping and data processing
+import requests  # For making HTTP requests to fetch website content
+from bs4 import BeautifulSoup  # For parsing HTML and XML documents
+import re  # For working with regular expressions (though not used here, but useful for pattern matching)
+
+# Function to extract data based on user-provided examples
+def extract_data(url, examples):
+    """
+    This function scrapes data from a website based on user-provided examples.
+
+    Args:
+        url (str): The URL of the website to scrape data from.
+        examples (list): A list of dictionaries where each dictionary represents an example of data to extract.
+            Each dictionary should contain keys like "element" (HTML element type), "attribute" (optional attribute to target), 
+            "text" (expected text content), and "value" (desired data to extract).
+
+    Returns:
+        list: A list of dictionaries containing the extracted data. Each dictionary follows the same structure as the examples.
+    """
+
+    # Fetch website content using HTTP GET request
+    response = requests.get(url)
+    # Parse the website content with BeautifulSoup
+    soup = BeautifulSoup(response.content, "html.parser")  
+
+    # List to store extracted data
+    extracted_data = []
+
+    # Loop through each user-provided example
+    for example in examples:
+        # Get the HTML element type from the example
+        element = example.get("element")
+        # Get the optional attribute (e.g., class, id) from the example
+        attribute = example.get("attribute")
+        # Get the expected text content to filter elements
+        text_content = example.get("text")
+        # Get the desired data to extract (e.g., text content or attribute value)
+        data_to_extract = example.get("value")
+
+        # Build selector string with pattern matching
+        selector = f"{element}"  # Start with the element type
+        if attribute:
+            # Add attribute selector if provided (e.g., [class="price"])
+            selector += f"[{attribute}]"
+        if text_content:
+            # Add text content filter (e.g., :contains('Product Name'))
+            selector += f":contains('{text_content}')"
+
+        # Find elements matching the selector
+        elements = soup.select(selector)
+
+        # Loop through found elements and extract data
+        for element in elements:
+            # Extract data based on the value key (e.g., text content, attribute value)
+            if data_to_extract == "text":
+                extracted_value = element.text  # Get text content of the element
+            else:
+                extracted_value = element.get(data_to_extract)  # Get attribute value (e.g., href, src)
+
+            # Add extracted data to the list in the desired format
+            extracted_data.append({"element": element, "value": extracted_value})
+
+    return extracted_data
+
+# Example usage with user-provided examples
+url = "https://www.example.com/products"  # Replace with target website
+examples = [
+    {"element": "h2", "text": "Product Name", "value": "text"},  # Extract product name from h2 containing "Product Name"
+    {"element": "span", "attribute": "class", "text": "Price", "value": "text"},  # Extract price from span with class "Price" containing "Price" text
+]
+
+# Call the extract_data function with the URL and examples
+extracted_data = extract_data(url, examples)
+
+# Print the extracted data
+for data in extracted_data:
+    print(f"Element: {data['element']}, Extracted Value: {data['value']}")
+
+# Note: This is a basic example. You can extend this to use regular expressions for more complex patterns
+# and explore machine learning libraries like scikit-learn for advanced data extraction based on trained models.
