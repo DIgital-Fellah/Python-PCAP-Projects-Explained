@@ -1,0 +1,61 @@
+# Import necessary libraries
+import random
+from collections import defaultdict
+
+# Define patterns and responses for different types of messages
+# Patterns is a dictionary where keys are the message types and values are lists of possible responses
+patterns = {
+    "greeting": ["Hi there!", "Hello!", "Hey there!"],
+    "how_are_you": ["I'm doing well, thanks for asking! How are you?", "I'm great! What can I do for you today?"],
+    "what_is_your_name": ["I'm your AI assistant, you can call me Bard"],
+    "what_can_you_do": ["I can answer your questions to the best of my ability, or have a casual conversation. How can I help you today?"],
+    "goodbye": ["Bye! Have a great day!", "See you later!", "Talk to you soon!"]
+}
+
+# Define a dictionary to store conversation history (optional)
+# This can be used to maintain context in more advanced chatbots
+conversation_history = defaultdict(list)
+
+def respond(message):
+    """
+    This function takes a user message and returns a response based on patterns and conversation history (if enabled).
+    
+    Args:
+        message: The user's message as a string.
+    
+    Returns:
+        A string containing the chatbot's response.
+    """
+    # Convert the message to lowercase for case-insensitive matching
+    message = message.lower()
+
+    # Check for exact pattern matches
+    for pattern, responses in patterns.items():
+        # If the user's message matches any of the patterns
+        if message in patterns[pattern]:
+            # Add the message to conversation history (optional)
+            conversation_history[pattern].append(message)
+            # Return a random response from the corresponding list
+            return random.choice(responses)
+
+    # If no exact match is found, return a generic response
+    # More complex logic (e.g., natural language processing) could be added here
+    return "Sorry, I don't understand. Can you rephrase your question?"
+
+# Main loop to keep the conversation going until the user says "goodbye"
+while True:
+    # Get user input
+    user_message = input("You: ")
+
+    # Exit the loop if the user says "goodbye"
+    if user_message.lower() in patterns["goodbye"]:
+        break
+
+    # Get the chatbot's response
+    response = respond(user_message)
+
+    # Print the chatbot's response
+    print("Bard:", response)
+
+    # Add the response to conversation history (optional)
+    conversation_history["response"].append(response)
