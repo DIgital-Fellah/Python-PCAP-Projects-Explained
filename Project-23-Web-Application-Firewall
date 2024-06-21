@@ -1,0 +1,64 @@
+from wsgiref.simple_server import make_server
+from urllib.parse import urlparse
+import re
+
+# Define blacklist patterns for common SQL injection attacks
+# These regex patterns will be used to identify potential SQL injection attempts
+BLACKLIST_SQL = [
+    r"(\bselect\b|\bupdate\b|\bdelete\b|\binsert\b)",  # Matches SQL keywords
+    r"(\bwhere\b|\band\b|\bor\b)"  # Matches common SQL clauses
+]
+
+# Define blacklist patterns for common XSS attacks
+# These patterns will be used to identify potential cross-site scripting (XSS) attempts
+BLACKLIST_XSS = [
+    r"<script>",  # Matches opening script tag
+    r"</script>"  # Matches closing script tag
+]
+
+def waf_middleware(app):
+    """
+    This middleware function intercepts incoming HTTP requests
+    and performs basic checks for SQL injection and XSS attacks.
+    """
+    def waf_wrapper(environ, start_response):
+        # Parse request URL into components
+        url = urlparse(environ['PATH_INFO'])
+
+        # Check for suspicious patterns in URL path and query string for SQL injection
+        for pattern in BLACKLIST_SQL:
+            if any(re.search(pattern, url.path) or re.search(pattern, environ.get('QUERY_STRING', '')) for pattern in BLACKLIST_SQL):
+                # If a SQL injection pattern is found, respond with 403 Forbidden
+                start_response('403 Forbidden', [('Content-Type', 'text/plain')])
+                return [b"Access Denied: Suspected SQL injection attempt"]
+
+        # Check for suspicious patterns in URL path and query string for XSS
+        for pattern in BLACKLIST_XSS:
+            if any(pattern in url.path or pattern in environ.get('QUERY_STRING', '') for pattern in BLACKLIST_XSS):
+                # If an XSS pattern is found, respond with 403 Forbidden
+                start_response('403 Forbidden', [('Content-Type', 'text/plain')])
+                return [b"Access Denied: Suspected XSS attack"]
+
+        # If no malicious patterns are found, pass the request to the main application
+        return app(environ, start_response)
+
+    # Return the wrapper function to be used as middleware
+    return waf_wrapper
+
+# Example usage with a simple web application
+def hello_world_app(environ, start_response):
+    """
+    This is a simple web application that always responds with "Hello, World!".
+    """
+    start_response('200 OK', [('Content-Type', 'text/plain')])
+    return [b"Hello, World!"]
+
+# Apply the WAF middleware to the simple web application
+application = waf_middleware(hello_world_app)
+
+# Run the web server on port 8000, using the application with WAF middleware
+httpd = make_server('', 8000, application)
+print("Serving on port 8000...")
+
+# Start the server, and it will keep running, handling requests as they come in
+httpd.serve_forever()
