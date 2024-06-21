@@ -1,0 +1,147 @@
+# Define the alphabet used by the Enigma machine
+ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+class Rotor:
+    """
+    This class represents a single rotor in the Enigma machine.
+
+    Attributes:
+        wiring: A dictionary mapping input characters to output characters.
+        notch: An integer representing the notch position on the rotor that triggers rotor advancement.
+        position: An integer representing the current position of the rotor (index in ALPHABET).
+    """
+
+    def __init__(self, wiring, notch):
+        # Initialize the rotor with its wiring, notch position, and set the initial position to 0
+        self.wiring = wiring
+        self.notch = notch
+        self.position = 0
+
+    def substitute(self, char):
+        """
+        Substitutes a character based on the rotor's wiring at its current position.
+
+        Args:
+            char: The character to be substituted (uppercase letter).
+
+        Returns:
+            The substituted character based on the rotor's wiring.
+        """
+        # Calculate the new position by adding the rotor's current position to the character's index in ALPHABET
+        new_position = (self.position + ALPHABET.index(char)) % len(ALPHABET)
+        # Substitute the character using the rotor's wiring
+        substituted_char = self.wiring[ALPHABET[new_position]]
+        # Advance the rotor position by one
+        self.position = (self.position + 1) % len(ALPHABET)  # Update rotor position
+        return substituted_char
+
+    def rotate(self):
+        """
+        Rotates the rotor by one position.
+        """
+        # Increment the rotor's position by one, wrapping around if necessary
+        self.position = (self.position + 1) % len(ALPHABET)
+
+
+class Reflector:
+    """
+    This class represents the reflector in the Enigma machine, which swaps characters based on its wiring.
+
+    Attributes:
+        wiring: A dictionary mapping input characters to output characters.
+    """
+
+    def __init__(self, wiring):
+        # Initialize the reflector with its wiring
+        self.wiring = wiring
+
+    def reflect(self, char):
+        """
+        Reflects a character based on the reflector's wiring.
+
+        Args:
+            char: The character to be reflected (uppercase letter).
+
+        Returns:
+            The reflected character based on the reflector's wiring.
+        """
+        # Reflect the character using the reflector's wiring
+        return self.wiring[char]
+
+
+class EnigmaMachine:
+    """
+    This class represents the Enigma machine with rotors, reflector, and plugboard.
+
+    Attributes:
+        rotors: A list of Rotor objects representing the Enigma's rotors.
+        reflector: A Reflector object representing the Enigma's reflector.
+        plugboard: A dictionary mapping pairs of characters for swapping before rotor substitution.
+    """
+
+    def __init__(self, rotors, reflector, plugboard={}):
+        # Initialize the Enigma machine with its rotors, reflector, and optional plugboard
+        self.rotors = rotors
+        self.reflector = reflector
+        self.plugboard = plugboard
+
+    def configure(self, rotor_order, rotor_settings, ring_settings):
+        """
+        Configures the Enigma machine with rotor order, settings, and ring settings.
+
+        Args:
+            rotor_order: A list of integer indices representing the order of rotors to use.
+            rotor_settings: A list of integer indices representing the starting positions of rotors.
+            ring_settings: A list of integer indices representing the ring settings of rotors.
+        """
+        # Configure each rotor based on the given settings
+        for i, (rotor, setting, ring) in enumerate(zip(self.rotors[rotor_order], rotor_settings, ring_settings)):
+            # Set the rotor's position considering the rotor setting and ring setting
+            rotor.position = (setting - ring) % len(ALPHABET)
+            # Update the rotor's position in the Enigma machine
+            self.rotors[i].position = rotor.position
+
+    def encrypt(self, message):
+        """
+        Encrypts a message using the Enigma machine's current configuration.
+
+        Args:
+            message: The message to be encrypted (uppercase string).
+
+        Returns:
+            The encrypted message (uppercase string).
+        """
+        # Initialize the encrypted message as an empty string
+        encrypted_message = ""
+        for char in message:
+            # Apply plugboard substitution if the character is mapped
+            if char in self.plugboard:
+                char = self.plugboard[char]
+            elif char in self.plugboard.values():
+                char = list(self.plugboard.keys())[list(self.plugboard.values()).index(char)]
+
+            # Pass through rotors from right to left
+            for rotor in reversed(self.rotors):
+                char = rotor.substitute(char)
+
+            # Reflect the character using the reflector
+            reflected_char = self.reflector.reflect(char)
+
+            # Pass back through rotors from left to right
+            for rotor in self.rotors:
+                char = rotor.substitute(reflected_char)
+
+            # Add the resulting character to the encrypted message
+            encrypted_message += char
+
+            # Check for rotor advancement based on notch positions
+            for i in range(len(self.rotors) - 1, 0, -1):
+                if self.rotors[i].position == self.rotors[i].notch:
+                    self.rotors[i].rotate()
+                    if i > 0:
+                        self.rotors[i-1].rotate()
+
+        # Return the final encrypted message
+        return encrypted_message
+
+# OVER
