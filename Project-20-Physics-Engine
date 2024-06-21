@@ -1,0 +1,134 @@
+class Vector2D:
+    """
+    Simple 2D vector class to represent vectors in a 2D space.
+    """
+    def __init__(self, x, y):
+        self.x = x  # x-coordinate of the vector
+        self.y = y  # y-coordinate of the vector
+
+    def __add__(self, other):
+        """
+        Vector addition: adds two vectors component-wise.
+        """
+        return Vector2D(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other):
+        """
+        Vector subtraction: subtracts one vector from another component-wise.
+        """
+        return Vector2D(self.x - other.x, self.y - other.y)
+
+    def __mul__(self, scalar):
+        """
+        Scalar multiplication: multiplies a vector by a scalar.
+        """
+        return Vector2D(self.x * scalar, self.y * scalar)
+
+    def magnitude(self):
+        """
+        Calculate magnitude (length) of the vector.
+        """
+        return (self.x**2 + self.y**2)**0.5
+
+class RigidBody:
+    """
+    Represents a rigid body with mass, position, velocity, and acceleration.
+    """
+    def __init__(self, mass, position, velocity):
+        self.mass = mass  # Mass of the rigid body
+        self.position = position  # Position of the rigid body as a Vector2D
+        self.velocity = velocity  # Velocity of the rigid body as a Vector2D
+        self.acceleration = Vector2D(0, 0)  # Initial acceleration is zero
+
+    def update(self, dt):
+        """
+        Updates the position and velocity of the rigid body based on acceleration
+        and timestep dt using Verlet integration.
+        """
+        # Update velocity and position based on acceleration
+        self.velocity = self.velocity + self.acceleration * dt
+        self.position = self.position + self.velocity * dt + self.acceleration * (dt * dt / 2)
+        self.acceleration = Vector2D(0, 0)  # Reset acceleration after each update
+
+    def apply_force(self, force):
+        """
+        Applies a force to the rigid body, updating its acceleration.
+        """
+        self.acceleration += force / self.mass  # a = F / m
+
+def distance(p1, p2):
+    """
+    Calculates the squared distance between two points.
+    This avoids the computational cost of a square root.
+    """
+    return (p1.x - p2.x)**2 + (p1.y - p2.y)**2
+
+def collision_detection(body1, body2):
+    """
+    Simple circle-circle collision detection.
+    """
+    # Check if the distance between centers is less than the sum of radii
+    radius1 = 1  # Placeholder for body1 radius
+    radius2 = 1  # Placeholder for body2 radius
+    return distance(body1.position, body2.position) < (radius1 + radius2)**2
+
+def collision_resolution(body1, body2):
+    """
+    Simple elastic collision resolution using relative velocity.
+    """
+    # Only perform collision resolution if there's a collision
+    if not collision_detection(body1, body2):
+        return
+
+    # Calculate relative position and velocity
+    normal = body2.position - body1.position
+    relative_velocity = body2.velocity - body1.velocity
+
+    # Project relative velocity onto the normal vector
+    normal_magnitude = normal.magnitude()
+    if normal_magnitude == 0:  # Prevent division by zero
+        return
+
+    normal_relative_velocity = (normal.x * relative_velocity.x + normal.y * relative_velocity.y) / normal_magnitude
+
+    # Calculate impulse magnitude based on relative mass and normal relative velocity
+    total_mass = body1.mass + body2.mass
+    impulse_magnitude = 2 * normal_relative_velocity / total_mass
+
+    # Apply impulse to each body in opposite directions
+    impulse = normal * (impulse_magnitude / normal_magnitude)
+    body1.velocity -= impulse / body1.mass
+    body2.velocity += impulse / body2.mass
+
+def simulate(bodies, dt, num_steps):
+    """
+    Simulates the physics for a list of rigid bodies over a number of steps.
+    """
+    for _ in range(num_steps):
+        # Apply forces to each body (e.g., gravity)
+        for body in bodies:
+            body.apply_force(Vector2D(0, -9.81 * body.mass))  # Apply gravity
+
+        # Update each rigid body
+        for body in bodies:
+            body.update(dt)
+
+        # Check for collisions between all pairs of bodies
+        for i in range(len(bodies)):
+            for j in range(i + 1, len(bodies)):
+                collision_resolution(bodies[i], bodies[j])
+
+# Example usage: create two rigid bodies and simulate their motion
+body1 = RigidBody(1, Vector2D(2, 5), Vector2D(1, 0))  # Mass 1 kg, position (2, 5), velocity (1, 0)
+body2 = RigidBody(2, Vector2D(5, 3), Vector2D(0, 1))  # Mass 2 kg, position (5, 3), velocity (0, 1)
+
+# List of bodies to simulate
+bodies = [body1, body2]
+
+# Run the simulation with a time step of 0.01 seconds for 100 steps
+simulate(bodies, 0.01, 100)
+
+# Print final positions and velocities of the bodies
+print(f"Body 1 position: ({body1.position.x}, {body1.position.y}), velocity: ({body1.velocity.x}, {body1.velocity.y})")
+print(f"Body 2 position: ({body2.position.x}, {body2.position.y}), velocity: ({body2.velocity.x}, {body2.velocity.y})")
+
