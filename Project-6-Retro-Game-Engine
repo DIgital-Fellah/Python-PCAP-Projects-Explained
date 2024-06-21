@@ -1,0 +1,93 @@
+# Basic building blocks for a retro game engine
+
+# Class representing a Sprite (game object)
+class Sprite:
+    def __init__(self, x, y, width, height, color):
+        # Initialize the sprite with position (x, y), size (width, height), and color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.color = color
+
+    def draw(self, screen):
+        # Update this function to draw the sprite on the screen using the provided library
+        # (e.g., pygame, Pyxel)
+        # For example, in pygame, it might look like:
+        # pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
+        pass
+
+# Class representing the Game
+class Game:
+    def __init__(self, width, height, caption):
+        # Initialize the game window size (width, height) and caption (window title)
+        self.width = width
+        self.height = height
+        self.caption = caption
+        self.screen = None  # This will hold the game screen, to be initialized later
+        self.objects = []  # List to store all game objects (sprites)
+        self.running = True  # Flag to control the game loop
+
+    def init(self):
+        # Initialize the game window using the chosen library (e.g., pygame.init())
+        # For example, in pygame, it might look like:
+        # pygame.init()
+        # self.screen = pygame.display.set_mode((self.width, self.height))
+        # pygame.display.set_caption(self.caption)
+        pass
+
+    def start(self):
+        # Start the game by initializing the window and running the main game loop
+        self.init()  # Initialize game window
+        self.run()   # Run the main game loop
+
+    def run(self):
+        # Main game loop: runs while self.running is True
+        while self.running:
+            self.handle_events()  # Process user input events
+            self.update()         # Update game state
+            self.draw()           # Render the game objects
+
+    def handle_events(self):
+        # Handle user input events (e.g., keyboard, mouse) and update game state accordingly
+        # For example, in pygame, it might look like:
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         self.running = False
+        pass
+
+    def update(self):
+        # Update game objects (e.g., move sprites, handle collisions)
+        pass
+
+    def draw(self):
+        # Clear the screen and draw all game objects on the screen
+        # For example, in pygame, it might look like:
+        # self.screen.fill((0, 0, 0))  # Clear screen with black color
+        # for obj in self.objects:
+        #     obj.draw(self.screen)   # Draw each game object
+        # pygame.display.flip()       # Update the full display Surface to the screen
+        pass
+
+    def add_object(self, obj):
+        # Add a game object (sprite) to the game
+        self.objects.append(obj)
+
+# Example usage: creating a game instance and adding objects
+
+# Create a game instance with width=300, height=200, and window title "My Retro Game"
+game = Game(300, 200, "My Retro Game")
+
+# Create some example sprites (game objects)
+# Create a player paddle sprite at position (10, 100), size (20x50), color green (0, 255, 0)
+player_paddle = Sprite(10, 100, 20, 50, (0, 255, 0))
+
+# Create a ball sprite at position (150, 100), size (10x10), color red (255, 0, 0)
+ball = Sprite(150, 100, 10, 10, (255, 0, 0))
+
+# Add the player paddle and ball sprites to the game
+game.add_object(player_paddle)
+game.add_object(ball)
+
+# Start the game (initialize and run the main game loop)
+game.start()
