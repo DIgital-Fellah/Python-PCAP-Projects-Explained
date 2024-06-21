@@ -1,0 +1,51 @@
+import re  # Import the regular expression module
+
+def main():
+  """
+  Interactive tool for testing and exploring regular expressions.
+  This function contains an input loop that allows the user to 
+  input a regex pattern and a test string, then displays the matches.
+  """
+
+  # Input loop for regular expression and test data
+  while True:  # Infinite loop for continuous input until user decides to quit
+    # Prompt user for a regular expression pattern
+    regex_pattern = input("Enter your regular expression (or 'q' to quit): ")
+    
+    # Check if the user wants to quit
+    if regex_pattern.lower() == 'q':  # If the user inputs 'q' or 'Q'
+      break  # Exit the loop and end the program
+
+    # Prompt user for the string to test against the regular expression
+    test_data = input("Enter the string to test against: ")
+
+    # Compile the regular expression for efficiency
+    try:
+      regex_obj = re.compile(regex_pattern)  # Compile the input pattern
+    except re.error as e:  # Catch any errors in the regex pattern
+      # Inform the user about the invalid regex and the reason
+      print(f"Invalid regex: {e}")
+      continue  # Skip to the next iteration of the loop
+
+    # Search for all matches of the regex pattern in the test data
+    matches = regex_obj.findall(test_data)  # Find all matches
+
+    # Display results
+    if matches:  # If there are any matches
+      print(f"Matches found:")
+      for match in matches:  # Loop through each match
+        print(match)  # Print the match
+    else:  # If no matches are found
+      print("No matches found.")
+
+    # Option for further exploration (replace with desired functionality)
+    print("Do you want to explore the matches further? (y/n)")
+    explore_choice = input().lower()  # Get user's choice and convert to lowercase
+    if explore_choice == 'y':  # If user wants to explore further
+      # Placeholder for additional exploration functionality
+      # Add your logic here to explore capture groups, match spans, etc.
+      # (e.g., print information about each match)
+      print("Exploration functionality not yet implemented.")  # Inform the user
+
+if __name__ == "__main__":
+  main()  # Call the main function to start the program
