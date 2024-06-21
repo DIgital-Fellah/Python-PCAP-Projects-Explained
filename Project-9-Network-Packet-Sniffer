@@ -1,0 +1,88 @@
+# Import necessary libraries from Scapy for network packet capturing and analysis
+from scapy.all import sniff, get_if_list, getmac, Ether, IP, TCP, UDP, Raw
+
+# Function to get available network interfaces
+def get_interfaces():
+    """
+    This function retrieves a list of available network interfaces on the system.
+    It prints each interface with an index number and returns the list of interfaces.
+    """
+    # Get a list of all network interfaces available on the system
+    interfaces = get_if_list()
+    
+    # Print the list of interfaces with index numbers for easy selection
+    print("Available Interfaces:")
+    for i in range(len(interfaces)):
+        print(f"{i}. {interfaces[i]}")
+    
+    # Return the list of network interfaces
+    return interfaces
+
+# Function to capture and analyze packets
+def packet_sniffer(interface, filter_expr=None):
+    """
+    This function captures network packets from the specified interface and displays information about them.
+    
+    Args:
+        interface (str): Name of the network interface to capture from.
+        filter_expr (str, optional): Scapy filter expression to limit captured packets. Defaults to None (capture all).
+    """
+    # Get the MAC address for the specified network interface
+    source_mac = getmac(interface)
+    
+    # Define an inner function to analyze each captured packet
+    def analyze_packet(packet):
+        """
+        This inner function analyzes a captured packet and displays relevant information.
+        
+        Args:
+            packet (scapy.Packet): The captured network packet.
+        """
+        # Check if the packet contains an Ethernet layer
+        if Ether in packet:
+            # Get the source and destination IP addresses and protocol type from the packet
+            source_ip = packet[IP].src
+            destination_ip = packet[IP].dst
+            protocol = packet[IP].proto
+            
+            # Print basic information about the packet
+            print(f"\nSource MAC: {packet[Ether].src}")
+            print(f"Destination MAC: {packet[Ether].dst}")
+            print(f"Source IP: {source_ip}")
+            print(f"Destination IP: {destination_ip}")
+            
+            # Check for specific protocols (TCP, UDP) and print protocol information
+            if protocol == 6:  # Protocol number for TCP is 6
+                print(f"Protocol: TCP (Transmission Control Protocol)")
+                print(f"Source Port: {packet[TCP].sport}")
+                print(f"Destination Port: {packet[TCP].dport}")
+            elif protocol == 17:  # Protocol number for UDP is 17
+                print(f"Protocol: UDP (User Datagram Protocol)")
+                print(f"Source Port: {packet[UDP].sport}")
+                print(f"Destination Port: {packet[UDP].dport}")
+            else:
+                print(f"Protocol: {protocol}")
+            
+            # Check if the packet contains a payload layer and print the first 100 bytes of the payload
+            if Raw in packet:
+                print(f"\nPayload (first 100 bytes): {packet[Raw].load[:100].hex()}")
+
+    # Capture packets from the specified interface with the optional filter expression
+    sniff(iface=interface, prn=analyze_packet, filter=filter_expr)
+
+# Main program flow
+if __name__ == "__main__":
+    # Get the list of available network interfaces
+    interfaces = get_interfaces()
+    
+    # Prompt the user to select an interface by entering its index number
+    chosen_interface = interfaces[int(input("Enter interface number: "))]
+    
+    # Uncomment and modify the filter expression as needed to capture specific packets
+    # filter_expr = "tcp and port 80"  # Example: Capture only TCP traffic on port 80
+    
+    # Start packet capturing on the chosen interface with the specified filter expression (if any)
+    packet_sniffer(chosen_interface, filter_expr=None)  # Capture all packets (no filter)
+    
+    # Print a message indicating that packet capture has stopped
+    print("\nPacket capture stopped.")
