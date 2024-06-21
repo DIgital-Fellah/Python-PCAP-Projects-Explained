@@ -1,0 +1,107 @@
+import random
+
+class Individual:
+    """
+    Represents an individual in the population with its genotype and fitness score.
+    """
+    def __init__(self, genotype):
+        self.genotype = genotype  # Stores the individual's genotype
+        self.fitness = None  # Initializes the fitness to None
+
+    def set_fitness(self, fitness):
+        """
+        Sets the fitness score for the individual.
+        """
+        self.fitness = fitness  # Assigns the fitness score
+
+class Population:
+    """
+    Represents a population of individuals with selection and crossover functionalities.
+    """
+    def __init__(self, size, genotype_size, init_func):
+        # Initializes the population with a given size and genotype size
+        self.size = size  
+        # Creates individuals using the init_func to generate their genotypes
+        self.individuals = [Individual(init_func(genotype_size)) for _ in range(size)]  
+
+    def roulette_wheel_selection(self):
+        """
+        Selects parents based on roulette wheel selection (fitness proportional).
+        """
+        total_fitness = sum(individual.fitness for individual in self.individuals)  # Calculates total fitness
+        probabilities = [individual.fitness / total_fitness for individual in self.individuals]  # Probability for each individual
+        # Selects two individuals based on their fitness probabilities
+        return random.choices(self.individuals, weights=probabilities, k=2)  
+
+    def single_point_crossover(self, parent1, parent2):
+        """
+        Performs single-point crossover on two parent genotypes.
+        """
+        # Selects a random crossover point
+        crossover_point = random.randint(1, len(parent1.genotype) - 1)  
+        # Creates two children by exchanging genetic material at the crossover point
+        child1 = parent1.genotype[:crossover_point] + parent2.genotype[crossover_point:]
+        child2 = parent2.genotype[:crossover_point] + parent1.genotype[crossover_point:]
+        # Returns the new individuals created from the parents
+        return Individual(child1), Individual(child2)  
+
+def genetic_algorithm(fitness_func, population_size, genotype_size, generations, init_func, mutation_rate=0.01):
+    """
+    Implements the core genetic algorithm loop for optimization.
+    """
+    # Initializes the population
+    population = Population(population_size, genotype_size, init_func)  
+
+    # Main loop for generations
+    for _ in range(generations):
+        # Evaluate fitness for each individual
+        for individual in population.individuals:
+            individual.set_fitness(fitness_func(individual.genotype))  # Assigns fitness score to each individual
+
+        # Selection - Choose parents based on fitness
+        parents = population.roulette_wheel_selection()  
+
+        # Crossover - Create children with genetic variations
+        children = []
+        for parent1, parent2 in zip(parents[::2], parents[1::2]):
+            # Creates children using single-point crossover
+            child1, child2 = population.single_point_crossover(parent1, parent2)  
+            children.append(child1)
+            children.append(child2)
+
+        # Mutation - Introduce random changes with low probability
+        for child in children:
+            for i in range(len(child.genotype)):
+                if random.random() < mutation_rate:
+                    # Mutates the genotype at position i with a new random binary value
+                    child.genotype[i] = random.randint(0, 1)  
+
+        # Combine parents and children for next generation (elitism)
+        # Selects the top individuals based on fitness to form the new population
+        new_population = sorted(population.individuals + children, key=lambda ind: ind.fitness, reverse=True)[:population_size]  
+        population.individuals = new_population  # Updates the population with the new generation
+
+    # Return the best individual after evolution
+    return population.individuals[0]  # Returns the individual with the highest fitness
+
+# Example usage (replace with your specific problem definition)
+def fitness_func(genotype):
+    # Implement your fitness function here based on the problem (e.g., travel distance for TSP)
+    # This is a placeholder function and should be defined based on the specific problem
+    pass
+
+# Define the size of the genotype (number of genes) and the population size
+genotype_size = 10  
+population_size = 50
+generations = 100  # Number of generations for the algorithm to run
+
+def init_func(size):
+    # Initializes a genotype with random binary values
+    return [random.randint(0, 1) for _ in range(size)]  
+
+# Runs the genetic algorithm and finds the best individual
+best_individual = genetic_algorithm(fitness_func, population_size, genotype_size, generations, init_func)
+
+# Access the best solution (genotype) from the best individual
+print(best_individual.genotype)  # Prints the genotype of the best individual found by the algorithm
+
