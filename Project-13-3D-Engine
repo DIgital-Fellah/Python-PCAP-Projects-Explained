@@ -1,0 +1,105 @@
+# Math library for vector and matrix operations
+import numpy as np
+
+# Vertex class to store position and color
+class Vertex:
+    def __init__(self, x, y, z, r, g, b):
+        # Store position as a 4D vector for homogeneous coordinates
+        self.position = np.array([x, y, z, 1.0])
+        # Store color as an RGB vector
+        self.color = np.array([r, g, b])
+
+# Triangle class to represent a 3D triangle primitive
+class Triangle:
+    def __init__(self, v1, v2, v3):
+        # Store three vertices of the triangle
+        self.vertices = [v1, v2, v3]
+
+# Transformation functions
+def translate(v, tx, ty, tz):
+    # Create a translation matrix
+    translation_matrix = np.array([
+        [1.0, 0.0, 0.0, tx],  # Move in x direction
+        [0.0, 1.0, 0.0, ty],  # Move in y direction
+        [0.0, 0.0, 1.0, tz],  # Move in z direction
+        [0.0, 0.0, 0.0, 1.0]  # Homogeneous coordinate
+    ])
+    # Apply the translation matrix to the vertex
+    return np.matmul(translation_matrix, v)
+
+def scale(v, sx, sy, sz):
+    # Create a scaling matrix
+    scaling_matrix = np.array([
+        [sx, 0.0, 0.0, 0.0],  # Scale in x direction
+        [0.0, sy, 0.0, 0.0],  # Scale in y direction
+        [0.0, 0.0, sz, 0.0],  # Scale in z direction
+        [0.0, 0.0, 0.0, 1.0]  # Homogeneous coordinate
+    ])
+    # Apply the scaling matrix to the vertex
+    return np.matmul(scaling_matrix, v)
+
+def rotate_x(v, angle):
+    # Convert angle from degrees to radians
+    rad_angle = np.radians(angle)
+    # Create a rotation matrix around the x-axis
+    rotation_matrix = np.array([
+        [1.0, 0.0, 0.0, 0.0],  # x-coordinate remains the same
+        [0.0, np.cos(rad_angle), -np.sin(rad_angle), 0.0],  # Rotate y and z coordinates
+        [0.0, np.sin(rad_angle),  np.cos(rad_angle), 0.0],  # Rotate y and z coordinates
+        [0.0, 0.0, 0.0, 1.0]  # Homogeneous coordinate
+    ])
+    # Apply the rotation matrix to the vertex
+    return np.matmul(rotation_matrix, v)
+
+def rotate_y(v, angle):
+    # Convert angle from degrees to radians
+    rad_angle = np.radians(angle)
+    # Create a rotation matrix around the y-axis
+    rotation_matrix = np.array([
+        [ np.cos(rad_angle), 0.0,  np.sin(rad_angle), 0.0],  # Rotate x and z coordinates
+        [0.0, 1.0, 0.0, 0.0],  # y-coordinate remains the same
+        [-np.sin(rad_angle), 0.0,  np.cos(rad_angle), 0.0],  # Rotate x and z coordinates
+        [0.0, 0.0, 0.0, 1.0]  # Homogeneous coordinate
+    ])
+    # Apply the rotation matrix to the vertex
+    return np.matmul(rotation_matrix, v)
+
+def rotate_z(v, angle):
+    # Convert angle from degrees to radians
+    rad_angle = np.radians(angle)
+    # Create a rotation matrix around the z-axis
+    rotation_matrix = np.array([
+        [ np.cos(rad_angle), -np.sin(rad_angle), 0.0, 0.0],  # Rotate x and y coordinates
+        [ np.sin(rad_angle),  np.cos(rad_angle), 0.0, 0.0],  # Rotate x and y coordinates
+        [0.0, 0.0, 1.0, 0.0],  # z-coordinate remains the same
+        [0.0, 0.0, 0.0, 1.0]  # Homogeneous coordinate
+    ])
+    # Apply the rotation matrix to the vertex
+    return np.matmul(rotation_matrix, v)
+
+# Simple function to load a model from an OBJ file (limited functionality)
+def load_obj_model(filename):
+    vertices = []  # List to store vertices
+    faces = []  # List to store faces (triangles)
+    with open(filename, 'r') as f:  # Open the OBJ file
+        for line in f:  # Read the file line by line
+            if line.startswith('v '):  # If the line defines a vertex
+                # Parse vertex coordinates from the line
+                x, y, z = map(float, line.split()[1:])
+                # Create a Vertex object with default white color
+                vertices.append(Vertex(x, y, z, 255, 255, 255))
+            elif line.startswith('f '):  # If the line defines a face
+                # Parse triangle face indices (assuming triangles)
+                face_indices = map(lambda x: int(x.split('/')[0]), line.split()[1:])
+                # Convert indices to a list and append to faces list
+                faces.append(list(face_indices))
+    return vertices, faces  # Return the list of vertices and faces
+
+# Usage example (assuming an OBJ file named 'model.obj' exists in the same directory)
+vertices, faces = load_obj_model('model.obj')  # Load the model
+# Example transformations
+translated_vertex = translate(vertices[0].position, 1.0, 2.0, 3.0)  # Translate the first vertex
+scaled_vertex = scale(vertices[0].position, 2.0, 2.0, 2.0)  # Scale the first vertex
+rotated_vertex_x = rotate_x(vertices[0].position, 45)  # Rotate the first vertex around the x-axis by 45 degrees
+rotated_vertex_y = rotate_y(vertices[0].position, 45)  # Rotate the first vertex around the y-axis by 45 degrees
+rotated_vertex_z = rotate_z(vertices[0].position, 45)  # Rotate the first vertex around the z-axis by 45 degrees
