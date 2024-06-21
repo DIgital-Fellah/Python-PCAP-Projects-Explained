@@ -1,0 +1,114 @@
+# Abstract base class for all compiler stages
+class CompilerStage:
+    def __init__(self, next_stage=None):
+        # Initialize the compiler stage with the next stage in the pipeline
+        self.next_stage = next_stage
+
+    def handle(self, data):
+        # Process the data using the process method of the current stage
+        processed_data = self.process(data)
+        # If there's a next stage, pass the processed data to it
+        if self.next_stage:
+            processed_data = self.next_stage.handle(processed_data)
+        # Return the final processed data
+        return processed_data
+
+    def process(self, data):
+        # Abstract method to be implemented by subclasses
+        raise NotImplementedError("Subclasses must implement process method")
+
+
+# Lexer - breaks down the input string into tokens
+class Lexer(CompilerStage):
+    def __init__(self, tokens):
+        super().__init__()  # Initialize the parent class
+        self.tokens = tokens  # Set the tokens for this lexer
+
+    def process(self, code):
+        tokens = []  # List to store the generated tokens
+        current_pos = 0  # Current position in the input code
+        while current_pos < len(code):
+            char = code[current_pos]  # Get the current character
+
+            # Check for whitespace and skip
+            if char.isspace():
+                current_pos += 1
+                continue
+
+            # Check for operators and keywords (modify based on your language)
+            if char in "+-*/=<>":
+                tokens.append(("OPERATOR", char))  # Append operator token
+                current_pos += 1
+            elif char.isalpha():
+                # Extract identifier
+                identifier = ""
+                while current_pos < len(code) and code[current_pos].isalnum():
+                    identifier += code[current_pos]
+                    current_pos += 1
+                if identifier in self.tokens:
+                    tokens.append((identifier.upper(), None))  # Convert to uppercase for keywords
+                else:
+                    tokens.append(("IDENTIFIER", identifier))  # Append identifier token
+            else:
+                # Handle errors or unexpected characters
+                raise SyntaxError(f"Unexpected character: {char}")
+
+            # Update position
+            current_pos += 1
+        return tokens  # Return the list of tokens
+
+
+# Parser - builds an Abstract Syntax Tree (AST) from the token stream
+class Parser(CompilerStage):
+    def __init__(self, grammar):
+        super().__init__()  # Initialize the parent class
+        self.grammar = grammar  # Set the grammar for the parser
+
+    def process(self, tokens):
+        # Implement parsing logic here using the grammar and token stream
+        # This can involve building an AST (Abstract Syntax Tree)
+        # representing the program structure
+        raise NotImplementedError("Parser logic not implemented")
+
+
+# Code Generator - translates the AST into target code (bytecode, machine code etc.)
+class CodeGenerator(CompilerStage):
+    def __init__(self, target_language):
+        super().__init__()  # Initialize the parent class
+        self.target_language = target_language  # Set the target language for the code generator
+
+    def process(self, ast):
+        # Implement code generation logic based on the AST and target language
+        # This may involve generating assembly instructions or bytecode
+        raise NotImplementedError("Code generation logic not implemented")
+
+
+# Example usage (modify based on your specific language and grammar)
+def main():
+    # Define grammar (example using a simple dictionary)
+    grammar = {
+        "E": ["T", "+ E", "- E"],  # E -> T | + E | - E
+        "T": ["F", "* T", "/ T"],  # T -> F | * T | / T
+        "F": ["( E )", "IDENTIFIER"],  # F -> ( E ) | IDENTIFIER
+    }
+
+    # Define tokens
+    tokens = ["+", "-", "*", "/", "(", ")", "ID"]
+
+    # Create compiler stages
+    lexer = Lexer(tokens)  # Create a Lexer with the defined tokens
+    parser = Parser(grammar)  # Create a Parser with the defined grammar
+    code_generator = CodeGenerator("bytecode")  # Create a CodeGenerator for bytecode
+
+    # Set up pipeline
+    lexer.next_stage = parser  # Lexer passes output to Parser
+    parser.next_stage = code_generator  # Parser passes output to CodeGenerator
+
+    # Compile a simple expression
+    code = "a + b * c"  # Example input code
+    ast = lexer.handle(code)  # Pass the code through all stages
+    print("Compiled code:", ast)  # Replace with actual code generation output
+
+# Run the main function if this script is executed
+if __name__ == "__main__":
+    main() 
