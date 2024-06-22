@@ -1,0 +1,66 @@
+def yakkity_yak(code):
+    """
+    Interprets a Yakkity Yak program string.
+
+    Args:
+        code: The Yakkity Yak program string.
+        
+    The Yakkity Yak language has three instructions:
+        * "y": Increment a counter.
+        * "k": Double the counter (if possible, otherwise throws an error).
+        * "!": Print the current counter value.
+
+    Raises:
+        OverflowError: If the counter overflows during execution.
+    """
+    # Initialize the counter to 0
+    counter = 0
+    
+    # Loop over each character in the program string
+    for char in code:
+        # Check if the character is 'y'
+        if char == "y":
+            # Increment the counter by 1
+            counter += 1
+        # Check if the character is 'k'
+        elif char == "k":
+            # Double the counter value
+            counter *= 2
+            # Check for overflow (counter should never be negative)
+            if counter < 0:
+                # Raise an error if overflow occurs
+                raise OverflowError("Counter overflow!")
+        # Check if the character is '!'
+        elif char == "!":
+            # Print the current counter value
+            print(counter)
+        else:
+            # Ignore any unknown characters
+            pass
+
+# Example usage
+code = "ykkyy!ky!"  # This program increments the counter 5 times and prints twice
+
+try:
+    # Execute the Yakkity Yak program
+    yakkity_yak(code)
+except OverflowError as e:
+    # Print the error message if an overflow occurs
+    print(e)
+
+"""
+Explanation of the example program "ykkyy!ky!":
+
+1. "y": Increment the counter (counter = 1)
+2. "k": Double the counter (counter = 2)
+3. "k": Double the counter (counter = 4)
+4. "y": Increment the counter (counter = 5)
+5. "y": Increment the counter (counter = 6)
+6. "!": Print the counter (output = 6)
+7. "k": Double the counter (counter = 12)
+8. "y": Increment the counter (counter = 13)
+9. "!": Print the counter (output = 13)
+"""
+# The program ends here.
+# Note: This code does not handle very large integers, and overflow might be system-dependent.
+
