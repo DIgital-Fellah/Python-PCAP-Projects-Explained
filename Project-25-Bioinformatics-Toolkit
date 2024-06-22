@@ -1,0 +1,83 @@
+# Function to read FASTA files containing DNA sequences
+def read_fasta(filename):
+    """
+    This function reads a FASTA file containing DNA sequences and returns a dictionary.
+
+    Args:
+        filename (str): Path to the FASTA file.
+
+    Returns:
+        dict: Dictionary where keys are sequence IDs and values are DNA sequences.
+    """
+    sequences = {}  # Initialize an empty dictionary to store sequences
+    current_id = None  # Variable to store the current sequence ID
+    current_seq = ""  # Variable to store the current DNA sequence
+
+    # Open the file in read mode
+    with open(filename, "r") as f:
+        # Iterate through each line in the file
+        for line in f:
+            line = line.strip()  # Remove any leading/trailing whitespace
+            # Check if the line is a header line (starts with ">")
+            if line[0] == ">":
+                # If there is a current ID and sequence, store it in the dictionary
+                if current_id:
+                    sequences[current_id] = current_seq
+                current_id = line[1:]  # Extract the sequence ID (excluding the ">")
+                current_seq = ""  # Reset the current sequence
+            else:
+                current_seq += line  # Append the line to the current sequence
+    # After the loop, store the last sequence in the dictionary
+    if current_id:
+        sequences[current_id] = current_seq
+    return sequences  # Return the dictionary containing all sequences
+
+# Function to calculate GC content of a DNA sequence
+def gc_content(sequence):
+    """
+    This function calculates the GC content (percentage of G and C nucleotides) of a DNA sequence.
+
+    Args:
+        sequence (str): DNA sequence.
+
+    Returns:
+        float: GC content as a percentage.
+    """
+    sequence = sequence.upper()  # Convert the sequence to uppercase
+    gc_count = sequence.count("G") + sequence.count("C")  # Count G and C nucleotides
+    return (gc_count / len(sequence)) * 100  # Calculate GC content as a percentage
+
+# Function to reverse complement a DNA sequence
+def reverse_complement(sequence):
+    """
+    This function returns the reverse complement of a DNA sequence.
+
+    Args:
+        sequence (str): DNA sequence.
+
+    Returns:
+        str: Reverse complement of the DNA sequence.
+    """
+    # Dictionary to map each nucleotide to its complement
+    complement_map = {"A": "T", "T": "A", "G": "C", "C": "G"}
+    # Generate the reverse complement by reversing the sequence and mapping each base to its complement
+    return "".join([complement_map[base] for base in sequence[::-1]])
+
+# Function to count nucleotide frequencies in a DNA sequence
+def nucleotide_frequency(sequence):
+    """
+    This function counts the occurrences of each nucleotide (A, C, G, T) in a DNA sequence.
+
+    Args:
+        sequence (str): DNA sequence.
+
+    Returns:
+        dict: Dictionary where keys are nucleotides (A, C, G, T) and values are their counts.
+    """
+    sequence = sequence.upper()  # Convert the sequence to uppercase
+    # Initialize a dictionary to store nucleotide counts
+    nucleotide_counts = {"A": 0, "C": 0, "G": 0, "T": 0}
+    # Iterate through each base in the sequence
+    for base in sequence:
+        nucleotide_counts[base] += 1  # Increment the count for the current base
+    return nucleotide_counts  # Return the dictionary with nucleotide counts
